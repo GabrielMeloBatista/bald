@@ -1,4 +1,4 @@
-#include <deque>
+#include <vector>
 #include <cstdio>
 
 #define TEST_CLASS_NAME(name) TestCase_ ## name
@@ -14,11 +14,11 @@
 
 namespace bald {
 struct TestCase;
-std::deque<TestCase*> TEST_CASES;
+std::vector<TestCase*> TEST_CASES;
 
 struct TestCase {
   TestCase(const char *name, const char *desc) : name(name), desc(desc), pass(true) {
-    TEST_CASES.push_front(this);
+    TEST_CASES.push_back(this);
   }
 
   virtual void runTest() = 0;

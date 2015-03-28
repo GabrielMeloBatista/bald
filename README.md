@@ -29,11 +29,10 @@ int main() {
 
 # Example Output
 ```
-Running tests...
+[PASS] Does maths work?
+[PASS] This is a 64 bit system
 [FAIL] This test fails
    example.cpp:12: ASSERT(false)
-[PASS] This is a 64 bit system
-[PASS] Does maths work?
 
-[1/3] tests failed.
+   [1/3] tests failed.
 ```
