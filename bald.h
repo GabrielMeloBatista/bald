@@ -43,7 +43,7 @@ void run() {
   }
 
   if (failed == 0)
-    printf("\n\nAll tests pass!");
+    printf("\nAll tests pass!\n");
   else
     printf("\n[%d/%d] tests failed.\n", failed, (int)TEST_CASES.size());
 }
