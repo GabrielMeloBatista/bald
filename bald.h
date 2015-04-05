@@ -1,50 +1,51 @@
+#include <iostream>
+#include <iomanip>
 #include <vector>
-#include <cstdio>
-
-#define TEST_CLASS_NAME(name) TestCase_ ## name
-#define TEST(name, desc) \
-  namespace bald { \
-  struct TEST_CLASS_NAME(name) : public TestCase { \
-    TEST_CLASS_NAME(name)() : TestCase(#name, desc) { } \
-    virtual void runTest(); }; \
-  TEST_CLASS_NAME(name) test_ ## name; }\
-  void bald::TEST_CLASS_NAME(name)::runTest()
-
-#define ASSERT(cond) if (!(cond)) { pass = false; msg = #cond; file = __FILE__; line = __LINE__; return; }
+#include <chrono>
 
 namespace bald {
-struct TestCase;
-std::vector<TestCase*> TEST_CASES;
 
-struct TestCase {
-  TestCase(const char *name, const char *desc) : name(name), desc(desc), pass(true) {
-    TEST_CASES.push_back(this);
-  }
+#define STRINGIFY2(x) (#x)
+#define STRINGIFY(x) STRINGIFY2(x)
+#define ASSERT(check) do { if (!(check)) { throw bald::test_failure { __FILE__, STRINGIFY(__LINE__), #check }; } } while(0)
 
-  virtual void runTest() = 0;
+struct test_failure { const char *file, *line, *check; };
 
-  const char *name, *desc, *msg, *file;
-  int line;
-  bool pass;
+class test_module {
+  public:
+    test_module(const std::string& name)
+      : passed_(0), failed_(0)
+    {
+      std::cout << "[====] Testing module: " << name << std::endl;
+      start_ = hrc::now();
+    }
+
+    ~test_module() {
+      std::cout << "\nRan " << (passed_ + failed_) << " tests in ";
+      std::cout << std::fixed << std::setprecision(3) <<
+        std::chrono::duration_cast<ms>(hrc::now() - start_).count() / 1000.0 << "s ";
+      std::cout << "(" << passed_ << " passed, " << failed_ << " failed)" << std::endl;
+    }
+
+    template <class F>
+    void operator()(const std::string& desc, const F &func) {
+      try {
+        func();
+        std::cout << "[PASS] " << desc << std::endl;
+        passed_++;
+      } catch (test_failure f) {
+        std::cout << "[FAIL] " << desc << std::endl;
+        std::cout << "   " << f.file << ":" << f.line << ": ASSERT(" << f.check << ")" << std::endl;
+        failed_++;
+      }
+    }
+
+  private:
+    typedef std::chrono::high_resolution_clock hrc;
+    typedef std::chrono::milliseconds ms;
+
+    unsigned passed_, failed_;
+    hrc::time_point start_;
 };
 
-void run() {
-  printf("Running tests...\n");
-
-  int failed = 0;
-  for (unsigned i = 0; i < TEST_CASES.size(); i++) {
-    TEST_CASES[i]->runTest();
-    if (TEST_CASES[i]->pass) {
-      printf("[PASS] %s\n", TEST_CASES[i]->desc);
-    } else {
-      printf("[FAIL] %s\n   %s:%d: ASSERT(%s)\n", TEST_CASES[i]->desc, TEST_CASES[i]->file, TEST_CASES[i]->line, TEST_CASES[i]->msg);
-      failed++;
-    }
-  }
-
-  if (failed == 0)
-    printf("\nAll tests pass!\n");
-  else
-    printf("\n[%d/%d] tests failed.\n", failed, (int)TEST_CASES.size());
-}
 }

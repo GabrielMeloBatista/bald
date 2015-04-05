@@ -1,38 +1,46 @@
 # bald
-Bald is a quick & dirty C++ test harness in one header file. No fancy stuff.
+Bald is a quick & dirty C++11 test harness in one header file. No fancy stuff.
 
 # How to Use
 1. Include bald.h in your testing file.
-2. Declare your tests using the `TEST` macro.
-2. Call `bald::run()` in `main`.
+2. Create a `bald::test_module`.
+3. Run tests using lambda expressions.
 
-# Example
+# Example Code
 ```cpp
 #include "bald.h"
 
-TEST(Test1, "Does maths work?") {
-  ASSERT(3 * 9 == 27);
-}
-
-TEST(Test2, "This is a 64 bit system") {
-  ASSERT(sizeof(void *) == 8);
-}
-
-TEST(Test3, "This test fails") {
-  ASSERT(false);
-}
-
 int main() {
-  bald::run();
+  bald::test_module test_vector("Vector");
+
+  test_vector("initial size is zero", []() {
+    std::vector<int> v;
+    ASSERT(v.size() == 0);
+  });
+
+  test_vector("reserve changes capacity but not size", []() {
+    std::vector<int> v;
+    v.reserve(100);
+    ASSERT(v.capacity() == 100);
+    ASSERT(v.size() == 0);
+  });
+
+  test_vector("initializer list creates 100 element vector", []() {
+    std::vector<int> v {100};
+    ASSERT(v.size() == 100);
+  });
 }
 ```
 
 # Example Output
 ```
-[PASS] Does maths work?
-[PASS] This is a 64 bit system
-[FAIL] This test fails
-   example.cpp:12: ASSERT(false)
+$ g++ -std=c++11 example.cpp && ./a.out
+[====] Testing module: Vector
+[PASS] initial size is zero
+[PASS] reserve changes capacity but not size
+[FAIL] initializer list creates 100 element vector
+   example.cpp:20: ASSERT(v.size() == 100)
 
-   [1/3] tests failed.
+Ran 3 tests in 0.000s (2 passed, 1 failed)
+
 ```
